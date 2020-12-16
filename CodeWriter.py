@@ -24,6 +24,8 @@ class CodeWriter():
             'not': self.writeArithmeticNot
         }
 
+        self.countLabel = 0
+
     def writeArithmetic(self, command):
         self.commandsArithmetic[command]()
 
@@ -42,13 +44,75 @@ class CodeWriter():
         self.write("M=M-D")  # RAM[254] = novo topo pilha - D
 
     def writeArithmeticEq(self):
-        pass
+        label = "JEQ{}.{}".format(self.module, self.countLabel)
+        self.countLabel += 1
+        
+        self.write("@SP // eq")
+        self.write("AM=M-1")
+        self.write("D=M")
+        self.write("@SP")
+        self.write("AM=M-1")
+        self.write("D=M-D")
+        self.write("@" + label)
+        self.write("D;JEQ") #Se D = 0 pula para o label
+        self.write("D=1")
+        self.write("("+ label +")")
+        self.write("D=D-1") #Se D = 0, logo D = 0 - 1 = -1 (verdadeiro)
+        self.write("@SP")
+        self.write("A=M")
+        self.write("M=D")
+        self.write("@SP")
+        self.write("M=M+1")
 
     def writeArithmeticLt(self):
-        pass
+        labelTrue = "JLT_TRUE_{}.{}".format(self.module, self.countLabel)
+        labelFalse = "JLT_FALSE_{}.{}".format(self.module, self.countLabel)
+        self.countLabel += 1
+
+        self.write("@SP // lt")
+        self.write("AM=M-1")
+        self.write("D=M")
+        self.write("@SP")
+        self.write("AM=M-1")
+        self.write("D=M-D")
+        self.write("@" + labelTrue)
+        self.write("D;JLT")  # Se verdadeiro pula para labelTrue
+        self.write("D=0")
+        self.write("@" + labelFalse)
+        self.write("0;JMP")
+        self.write("(" + labelTrue + ")")
+        self.write("D=-1")
+        self.write("("+labelFalse+")")
+        self.write("@SP")
+        self.write("A=M")
+        self.write("M=D")
+        self.write("@SP")
+        self.write("M=M+1")
 
     def writeArithmeticGt(self):
-        pass
+        labelTrue = "JGT_TRUE_{}.{}".format(self.module, self.countLabel)
+        labelFalse = "JGT_FALSE_{}.{}".format(self.module, self.countLabel)
+        self.countLabel += 1
+
+        self.write("@SP // gt")
+        self.write("AM=M-1")
+        self.write("D=M")
+        self.write("@SP")
+        self.write("AM=M-1")
+        self.write("D=M-D")
+        self.write("@" + labelTrue)
+        self.write("D;JGT") # Se verdadeiro pula para labelTrue
+        self.write("D=0")
+        self.write("@" + labelFalse)
+        self.write("0;JMP")
+        self.write("("+ labelTrue +")")
+        self.write("D=-1")
+        self.write("("+labelFalse+")")
+        self.write("@SP")
+        self.write("A=M")
+        self.write("M=D")
+        self.write("@SP")
+        self.write("M=M+1")
 
     def writeArithmeticNeg(self):
         self.write("@SP // neg")
